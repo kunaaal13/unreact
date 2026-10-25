@@ -1,5 +1,6 @@
 import type {
   ComponentContext,
+  Context,
   EffectCallback,
   EffectDependencies,
   EffectState,
@@ -98,6 +99,19 @@ export function useEffect(effect: EffectCallback, deps?: EffectDependencies): vo
       nextState.cleanup = cleanup;
     }
   });
+}
+
+// Read the nearest supplied value, falling back when no provider value exists.
+export function useContext<T>(context: Context<T>): T {
+  if (!currentComponent) {
+    throw new Error("useContext must be called while a component is rendering");
+  }
+
+  if (currentComponent.contextValues.has(context.id)) {
+    return currentComponent.contextValues.get(context.id) as T;
+  }
+
+  return context.defaultValue;
 }
 
 // Select a component before rendering, or clear it after rendering.

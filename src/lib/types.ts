@@ -29,6 +29,12 @@ export type EffectState = {
   cleanup?: EffectCleanup;
 };
 
+// Identify a shared value and its fallback; provider values stay separate.
+export type Context<T> = {
+  readonly id: symbol;
+  readonly defaultValue: T;
+};
+
 // A function that produces a virtual element.
 export type ComponentFunction = () => Node;
 
@@ -37,6 +43,8 @@ export type ComponentContext = {
   component: ComponentFunction;
   node: Node | null;
   hooks: unknown[];
+  // Values supplied by ancestor providers; root instances start empty.
+  contextValues: Map<symbol, unknown>;
   // Callbacks collected during rendering, waiting for the DOM update.
   pendingEffects: (() => void)[];
   // Render this instance again after its state changes.

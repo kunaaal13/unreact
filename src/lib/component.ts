@@ -6,7 +6,11 @@ import { setCurrentComponentContext } from "./hooks.ts";
 const componentRegistry = new WeakMap<HTMLElement, ComponentContext>();
 
 // Render a component and keep its previous node for future updates.
-export function renderComponent(component: ComponentFunction, container: HTMLElement): void {
+export function renderComponent(
+  component: ComponentFunction,
+  container: HTMLElement,
+  inheritedValues?: ReadonlyMap<symbol, unknown>,
+): void {
   // Reuse this container's persistent component memory.
   let context = componentRegistry.get(container);
 
@@ -16,12 +20,18 @@ export function renderComponent(component: ComponentFunction, container: HTMLEle
       component: component,
       node: null,
       hooks: [],
+      contextValues: new Map<symbol, unknown>(),
       pendingEffects: [],
       // Remember how to render this component into its container again.
       rerender: () => renderComponent(component, container),
     };
 
     componentRegistry.set(container, context);
+  }
+
+  // Update scope only when supplied; state rerenders keep their existing scope.
+  if (inheritedValues !== undefined) {
+    context.contextValues = new Map(inheritedValues);
   }
 
   // Start a fresh queue; discard callbacks from any previous failed render.
