@@ -16,12 +16,16 @@ export function renderComponent(component: ComponentFunction, container: HTMLEle
       component: component,
       node: null,
       hooks: [],
+      pendingEffects: [],
       // Remember how to render this component into its container again.
       rerender: () => renderComponent(component, container),
     };
 
     componentRegistry.set(container, context);
   }
+
+  // Start a fresh queue; discard callbacks from any previous failed render.
+  context.pendingEffects = [];
 
   let newNode: ReturnType<ComponentFunction>;
 
@@ -41,4 +45,10 @@ export function renderComponent(component: ComponentFunction, container: HTMLEle
 
   // Save this node for comparison on the next render.
   context.node = newNode;
+
+  // Empty the queue before callbacks run: an effect might trigger another render.
+  const pendingEffects = context.pendingEffects.splice(0);
+
+  // Run effects after both the DOM and saved node are up to date.
+  pendingEffects.forEach((effect) => effect());
 }

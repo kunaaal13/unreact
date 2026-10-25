@@ -1,4 +1,10 @@
-import type { ComponentContext, StateSetter } from "./types.ts";
+import type {
+  ComponentContext,
+  EffectCallback,
+  EffectDependencies,
+  EffectState,
+  StateSetter,
+} from "./types.ts";
 
 // The component whose function is currently running.
 let currentComponent: ComponentContext | null = null;
@@ -49,6 +55,49 @@ export function useState<T>(initialValue: T): [T, StateSetter<T>] {
   };
 
   return [value, setState];
+}
+
+// Register work after the DOM update, optionally filtered by dependencies.
+export function useEffect(effect: EffectCallback, deps?: EffectDependencies): void {
+  if (!currentComponent) {
+    throw new Error("useEffect must be called while a component is rendering");
+  }
+
+  const component = currentComponent;
+  const index = hookIndex;
+  const previous = component.hooks[index] as EffectState | undefined;
+
+  // Always advance, including when this effect is skipped.
+  hookIndex++;
+
+  // First render or omitted dependencies means the effect should run.
+  let hasChanged = true;
+
+  if (previous && deps && previous.deps) {
+    const oldDeps = previous.deps;
+
+    // Rerun when dependency counts or individual values differ.
+    hasChanged =
+      deps.length !== oldDeps.length || deps.some((dep, i) => !Object.is(dep, oldDeps[i]));
+  }
+
+  if (!hasChanged) return;
+
+  // Snapshot dependencies now, but only save them after the DOM update succeeds.
+  const nextState: EffectState = { deps: deps?.slice() };
+  component.pendingEffects.push(() => {
+    // Stop the previous effect's work before starting its replacement.
+    previous?.cleanup?.();
+
+    // Save before calling effect, since effect could trigger another render.
+    component.hooks[index] = nextState;
+    const cleanup = effect();
+
+    // Save cleanup for the next rerun or unmount, rather than running it now.
+    if (typeof cleanup === "function") {
+      nextState.cleanup = cleanup;
+    }
+  });
 }
 
 // Select a component before rendering, or clear it after rendering.

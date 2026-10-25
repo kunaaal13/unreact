@@ -1,6 +1,6 @@
 import { createElement } from "./lib/index.ts";
 import { renderComponent } from "./lib/component.ts";
-import { useState } from "./lib/hooks.ts";
+import { useEffect, useState } from "./lib/hooks.ts";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -12,6 +12,12 @@ function Counter() {
   // Each hook call owns a separate slot; keep their order unchanged.
   const [count, setCount] = useState(0); // Slot 0.
   const [name, setName] = useState("Loki"); // Slot 1.
+
+  // Run after every DOM update; dependency filtering comes next.
+  useEffect(() => {
+    document.title = `Count: ${count}`;
+    console.log("Effect ran:", count, name);
+  }, [count]);
 
   return createElement(
     "div",
