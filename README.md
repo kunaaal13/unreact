@@ -15,8 +15,9 @@ bun run dev
 
 | Command                | Purpose                                               |
 | ---------------------- | ----------------------------------------------------- |
-| `bun start`            | Run the entry point once                              |
-| `bun run dev`          | Restart the entry point when files change             |
+| `bun start`            | Serve the browser playground                          |
+| `bun run dev`          | Serve with browser hot reload                         |
+| `bun run build`        | Bundle HTML and browser assets into `dist/`           |
 | `bun test`             | Run tests                                             |
 | `bun run test:watch`   | Rerun tests when files change                         |
 | `bun run typecheck`    | Check TypeScript types                                |
@@ -32,12 +33,16 @@ Both tools are local dev dependencies run through Bun scripts; no global install
 ## Structure
 
 ```text
+index.html       # Browser playground with #root mount point
 src/
   index.ts       # Starting point
   index.test.ts  # Starter smoke test
 ```
 
-TypeScript uses strict checks and includes browser DOM types for future rendering code. JSX is preserved; no React JSX runtime is configured. The dev command runs in Bun, not a browser; browser serving and JSX transforms can be added when needed.
+Open the URL printed by `bun run dev` (normally `http://localhost:3000`).
+`index.html` imports `src/index.ts`; Bun bundles TypeScript in memory and hot-reloads the browser as you edit. No manual rebuild or polling `dist/` needed. Use `bun run build` to generate static output in `dist/`, including its own `index.html` with bundled asset paths.
+
+TypeScript uses strict checks and includes browser DOM types. JSX is preserved by the type checker; no React JSX runtime is configured. Configure your own JSX factory/runtime when you reach that step.
 
 ## Practice ideas
 

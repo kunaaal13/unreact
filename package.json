@@ -4,8 +4,9 @@
   "description": "Building React from scratch to learn how it works.",
   "type": "module",
   "scripts": {
-    "start": "bun run src/index.ts",
-    "dev": "bun --watch src/index.ts",
+    "start": "bun index.html",
+    "dev": "bun --hot index.html",
+    "build": "bun build ./index.html --outdir ./dist --target browser",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "typecheck": "tsc --noEmit",
